@@ -1,0 +1,8 @@
+matplotlib
+scipy
+plotly
+numpy
+tqdm
+pandas
+wave
+argparse
