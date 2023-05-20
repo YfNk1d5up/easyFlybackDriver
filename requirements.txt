@@ -6,3 +6,4 @@ tqdm
 pandas
 wave
 argparse
+basic-pitch
