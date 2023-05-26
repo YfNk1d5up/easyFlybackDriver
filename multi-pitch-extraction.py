@@ -1,6 +1,8 @@
 import wave
 
 import essentia.standard as ess
+import pandas as pd
+import os
 import numpy
 import matplotlib.pyplot as plt
 
@@ -27,32 +29,29 @@ for i in range(4):
 pitch_curve = multipitchExtractor(audio)
 n_frames = len(pitch_curve)
 print("number of frames: %d" % n_frames)
-# Pitch is estimated on frames. Compute frame time positions.
-pitch_times = numpy.linspace(0.0, len(audio) / 44100.0, len(pitch_curve))
-multipitch_curve = [[], [], [], []]
-multipitch_curve_amp = [[], [], [], []]
-multipitch_curve_phase = [[], [], [], []]
-for f in pitch_curve:
-    for i in range(4):
-        multipitch_curve_amp[i].append(1000)
-        multipitch_curve_phase[i].append(0)
+
+# Plot the estimated pitch contour and confidence over time.f, axarr = plt.subplots(2, sharex=True)
+note_lst = []
+for i in range(n_frames):
+    timeframe_notes = [float(i * 128 / 44100)]
+    for j in range(4):
+        freq = 0
         try:
-            multipitch_curve[i].append(f[i])
+            freq = pitch_curve[i][j]
         except:
-            multipitch_curve[i].append(0)
+            pass
+        timeframe_notes.append(freq)
+        timeframe_notes.append(1)
+    note_lst.append(timeframe_notes)
+    # fig = plot_fft(fft.real, xf, fs, s, RESOLUTION)    # fig.write_image(f"data/frames/frame{frame_number}.png", scale=2)columns = ["time"]
+columns = ["time"]
+for n in range(4):
+    columns.append(f"note{n}")
+    columns.append(f"anote{n}")
+note_table = pd.DataFrame(note_lst, columns=columns)
+note_table.to_csv(os.path.join("data/output/",'multipitchmelodia.csv'),index=False)
 
-# Plot the estimated pitch contour and confidence over time.
-f, axarr = plt.subplots(2, sharex=True)
-fft_sig = []
-for i in range(4):
-    # xtraj = sonify.sonify_trajectory_with_sinusoid(multipitch_curve[i], pitch_times, len(audio), Fs=44100)
-    fft_i = sineModelSynth(numpy.array(multipitch_curve_amp[i]), numpy.array(multipitch_curve[i]),
-                           numpy.array(multipitch_curve_phase[i]))
-    ifft_i = ifft(fft_i)
-    overl_i = overl(ifft_i)
+import synthetize_notes
+FFT_WINDOWS_SECONDS = 128 / 44100
 
-    awrite[i](overl_i)
-    axarr[0].plot(pitch_times, multipitch_curve[i])
-axarr[0].set_title('estimated multipitch [Hz]')
-
-plt.savefig("singlepitch.png")
+synthetize_notes.save_wav_multi('multipitchmelodia', TOP_NOTES=4, sampling_rate=16000, FFT_WINDOW_SECONDS=FFT_WINDOWS_SECONDS, amplitude=1000)
