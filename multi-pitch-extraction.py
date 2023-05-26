@@ -9,14 +9,16 @@ import matplotlib.pyplot as plt
 # we start by instantiating the audio loader:
 loader = ess.MonoLoader(filename='separated/htdemucs/test-Polyphia-G.O.A.T/other.wav', )
 
-# and then we actually perform the loading:
-audio = loader()
-audio = ess.EqualLoudness()(audio)
-print(len(audio) / 44100.0)
+
 multipitchExtractor = ess.MultiPitchMelodia()
 keyExtractor = ess.KeyExtractor()
 rhythmExtractor = ess.RhythmExtractor()
 sineModelAnal = ess.SineModelAnal()
+filter = ess.BandPass(
+    bandwidth=700,
+    cutoffFrequency=880,
+    sampleRate=44100
+)
 sineModelSynth = ess.SineModelSynth()
 ifft = ess.IFFT()
 overl = ess.OverlapAdd()
@@ -26,6 +28,11 @@ for i in range(4):
         filename=f'data/output/multipitch/4voices_synthetize{i}.wav')
 # print(keyExtractor(audio))
 # print(rhythmExtractor(audio)[0])
+# and then we actually perform the loading:
+audio = loader()
+audio = ess.EqualLoudness()(audio)
+audio = filter(audio)
+print(len(audio) / 44100.0)
 pitch_curve = multipitchExtractor(audio)
 n_frames = len(pitch_curve)
 print("number of frames: %d" % n_frames)
