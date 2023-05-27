@@ -50,6 +50,13 @@ pExt = es.PredominantPitchMelodia(
     hopSize=params["hopSize"],
     sampleRate=params["sampleRate"]
 )
+multipitchExtractor = es.MultiPitchMelodia(
+    frameSize=params["frameSize"],
+    hopSize=params["hopSize"],
+    sampleRate=params["sampleRate"],
+    minFrequency=180,
+    maxFrequency=880
+)
 smsynstd = ess.SineModelSynth(
     sampleRate=params["sampleRate"],
     fftSize=params["frameSize"],
@@ -75,24 +82,27 @@ pool = essentia.Pool()
 
 # analysis
 loader.audio >> filter.signal
-filter.signal >> pExt.signal
+filter.signal >> multipitchExtractor.signal
 
 
-pExt.pitch >> (pool, "frequencies")
-pExt.pitchConfidence >> None
+#pExt.pitch >> (pool, "frequencies")
+#pExt.pitchConfidence >> None
+
+multipitchExtractor.pitch >> (pool, "frequencies")
 
 # run the network
 essentia.run(loader)
 
 
 freqs = pool["frequencies"].flatten()
+print(freqs)
 # init output audio array
 audioout = np.array(0)
 # loop over all frames
 for freq in tqdm.tqdm(freqs):
 
     outfft = smsynstd(np.array([1]),
-                   np.array([freq]),
+                   np.array(freq),
                    np.array([0])
                    )
 
