@@ -1,5 +1,8 @@
 import essentia
 import essentia.streaming as es
+import essentia.standard as ess
+import numpy as np
+import tqdm
 from pathlib import Path
 
 # algorithm parameters
@@ -42,16 +45,29 @@ smanal = es.SineModelAnal(
     freqDevOffset=params["freqDevOffset"],
     freqDevSlope=params["freqDevSlope"],
 )
-smsyn = es.SineModelSynth(
+pExt = es.PredominantPitchMelodia(
+    frameSize=params["frameSize"],
+    hopSize=params["hopSize"],
+    sampleRate=params["sampleRate"]
+)
+smsynstd = ess.SineModelSynth(
     sampleRate=params["sampleRate"],
     fftSize=params["frameSize"],
     hopSize=params["hopSize"],
 )
-ifft = es.IFFT(size=params["frameSize"])
-overl = es.OverlapAdd(frameSize=params["frameSize"], hopSize=params["hopSize"])
-awrite = es.MonoWriter(
+ifftstd = ess.IFFT(size=params["frameSize"])
+overlstd = ess.OverlapAdd(frameSize=params["frameSize"], hopSize=params["hopSize"])
+awritestd = ess.MonoWriter(
     filename=str(outputFilename), sampleRate=params["sampleRate"]
 )
+one = es.UnaryOperator(scale=0,
+                       shift=1000,
+                       type="identity"
+                       )
+zero = es.UnaryOperator(scale=0,
+                       shift=0,
+                       type="identity"
+                       )
 pool = essentia.Pool()
 
 
@@ -59,22 +75,32 @@ pool = essentia.Pool()
 
 # analysis
 loader.audio >> filter.signal
-filter.signal >> fcut.signal
-fcut.frame >> w.frame
-w.frame >> fft.frame
-fft.fft >> smanal.fft
-smanal.magnitudes >> (pool, "magnitudes")
-smanal.frequencies >> (pool, "frequencies")
-smanal.phases >> (pool, "phases")
+filter.signal >> pExt.signal
 
-# synthesis
-smanal.magnitudes >> smsyn.magnitudes
-smanal.frequencies >> smsyn.frequencies
-smanal.phases >> smsyn.phases
-smsyn.fft >> ifft.fft
-ifft.frame >> overl.frame
-overl.signal >> awrite.audio
-overl.signal >> (pool, "audio")
+
+pExt.pitch >> (pool, "frequencies")
+pExt.pitchConfidence >> None
 
 # run the network
 essentia.run(loader)
+
+
+freqs = pool["frequencies"].flatten()
+# init output audio array
+audioout = np.array(0)
+# loop over all frames
+for freq in tqdm.tqdm(freqs):
+
+    outfft = smsynstd(np.array([1]),
+                   np.array([freq]),
+                   np.array([0])
+                   )
+
+    # STFT synthesis
+    out = overlstd(ifftstd(outfft))
+    audioout = np.append(audioout, out)
+
+
+# write audio output
+awritestd(audioout.astype(np.float32))
+essentia.reset(loader)
