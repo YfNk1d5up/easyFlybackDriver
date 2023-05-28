@@ -8,8 +8,8 @@ params = {
     "hopSize": 512,
     "startFromZero": False,
     "sampleRate": 44100,
-    "maxnSines": 4,
-    "magnitudeThreshold": 40,
+    "maxnSines": 1,
+    "magnitudeThreshold": -47,
     "minSineDur": 0.02,
     "freqDevOffset": 10,
     "freqDevSlope": 0.001,
@@ -52,13 +52,14 @@ multipitchExtractor = es.MultiPitchMelodia(
     sampleRate=params["sampleRate"],
     timeContinuity=100
 )
-"""
+
 multipitchExtractor = es.MultiPitchMelodia(
     frameSize=params["frameSize"],
     hopSize=params["hopSize"],
     magnitudeThreshold=params["magnitudeThreshold"],
     sampleRate=params["sampleRate"]
 )
+"""
 smanal = es.SineModelAnal(
     sampleRate=params["sampleRate"],
     maxnSines=params["maxnSines"],

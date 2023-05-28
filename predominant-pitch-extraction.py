@@ -5,12 +5,12 @@ import tqdm
 
 
 # input and output files
-inputFilename = 'data/input/takeonme/others.wav'
-outputFilename = 'data/output/takeonme/others.wav'
+inputFilename = 'data/input/takeonme/vocals.wav'
+outputFilename = 'data/output/takeonme/vocalsv2.wav'
 # algorithm parameters
 params = {
     "frameSize": 2048,
-    "hopSize": 512,
+    "hopSize": 128,
     "startFromZero": False,
     "sampleRate": 44100,
     "maxnSines": 2,
@@ -19,7 +19,7 @@ params = {
     "freqDevSlope": 0.001,
     "minFreq":300,
     "maxFreq":1250,
-    "magnitudeThreshold":30
+    "magnitudeThreshold":40
 }
 
 # initialize some algorithms
@@ -65,9 +65,9 @@ for i in range(4):
 # print(rhythmExtractor(audio)[0])
 # and then we actually perform the loading:
 audio = loader()
-audio = ess.EqualLoudness()(audio)
+#audio = ess.EqualLoudness()(audio)
 audio = filter(audio)
-duration = len(audio) / 44100.0
+duration = len(audio) / params["sampleRate"]
 mins = duration // 60
 secs = duration % 60
 print(f'Duration : {int(mins)}m{int(secs)}s')

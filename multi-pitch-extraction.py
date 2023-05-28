@@ -5,8 +5,8 @@ import tqdm
 
 
 # input and output files
-inputFilename = 'data/input/take_on_me_8bit.wav'
-outputFilename = 'data/output/synthesis_sinemodel.wav'
+inputFilename = 'data/input/takeonme/other.wav'
+outputFilename = 'data/output/takeonme/other_multi.wav'
 # algorithm parameters
 params = {
     "frameSize": 2048,
@@ -67,7 +67,7 @@ for i in range(4):
 audio = loader()
 audio = ess.EqualLoudness()(audio)
 audio = filter(audio)
-duration = len(audio) / 44100.0
+duration = len(audio) / params["sampleRate"]
 mins = duration // 60
 secs = duration % 60
 print(f'Duration : {int(mins)}m{int(secs)}s')
