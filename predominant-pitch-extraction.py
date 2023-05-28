@@ -5,8 +5,8 @@ import tqdm
 
 
 # input and output files
-inputFilename = 'data/input/take_on_me_8bit.wav'
-outputFilename = 'data/output/synthesis_sinemodel.wav'
+inputFilename = 'data/input/takeonme/others.wav'
+outputFilename = 'data/output/takeonme/others.wav'
 # algorithm parameters
 params = {
     "frameSize": 2048,
@@ -71,17 +71,13 @@ duration = len(audio) / 44100.0
 mins = duration // 60
 secs = duration % 60
 print(f'Duration : {int(mins)}m{int(secs)}s')
-pitch_curve = multipitchExtractor(audio)
+pitch_curve, pitch_conf = predominantPitchExtractor(audio)
 
 audioout = np.array(0)
 # loop over all frames
 for freq in tqdm.tqdm(pitch_curve):
-    magn = []
-    for f in freq:
-        magn.append(1)
-
-    outfft = smsynstd(essentia.array(magn),
-                   essentia.array(freq),
+    outfft = smsynstd(essentia.array([1]),
+                   essentia.array([freq]),
                    essentia.array([])
                    )
 
