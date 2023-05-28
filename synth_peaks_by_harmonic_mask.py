@@ -14,7 +14,7 @@ outputFilename = 'harmonic_sub_synthesis.wav'
 
 params = {
     "frameSize": 2048,
-    "hopSize": 1024,
+    "hopSize": 512,
     "startFromZero": False,
     "sampleRate": 44100.0,
     "maxnSines": 4,
@@ -23,13 +23,12 @@ params = {
     "freqDevOffset": 10,
     "freqDevSlope": 0.001,
     "attenuation_dB":100,
+    "minFreq":300,
+    "maxFreq":1250,
     "maskbinwidth":2
 }
 
-# create an audio loader and import audio file
-audio = es.MonoLoader(filename=str(inputFilename),
-                      sampleRate=params["sampleRate"])()
-print(f"Duration of the audio sample [sec]: {len(audio) / params['sampleRate']:.3f}")
+
 
 
 # initialize some algorithms
@@ -53,6 +52,11 @@ smsyn = es.SineModelSynth(
     fftSize=params["frameSize"],
     hopSize=params["hopSize"],
 )
+filter = es.BandPass(
+    bandwidth=params["maxFreq"]-params["minFreq"],
+    cutoffFrequency=params["maxFreq"],
+    sampleRate=params["sampleRate"]
+)
 ifft = es.IFFT(size=params["frameSize"])
 overl = es.OverlapAdd(frameSize=params["frameSize"], hopSize=params["hopSize"])
 awrite = es.MonoWriter(
@@ -65,6 +69,11 @@ hmask = es.HarmonicMask(
     attenuation=params["attenuation_dB"]
 )
 
+# create an audio loader and import audio file
+audio = es.MonoLoader(filename=str(inputFilename),
+                      sampleRate=params["sampleRate"])()
+print(f"Duration of the audio sample [sec]: {len(audio) / params['sampleRate']:.3f}")
+audio = filter(audio)
 
 
 # init output audio array
@@ -91,6 +100,7 @@ for idx, frame in tqdm.tqdm(enumerate(
     m1 = magnitudes[0]
     f1 = frequencies[0]
     p1 = phases[0]
+    """
     fft2 = hmask(fft1, f1)
     frequencies, magnitudes, phases = smanal(fft2)
     # get pitch of current frame
@@ -103,13 +113,14 @@ for idx, frame in tqdm.tqdm(enumerate(
     m3 = magnitudes[0]
     f3 = frequencies[0]
     p3 = phases[0]
-    m = [m0, m1, m2, m3]
-    f = [f0, f1, f2, f3]
-    p = [p0, p1, p2, p3]
+    """
+    m = [1, 1]
+    f = [f0, f1]
+    p = [p0, p1]
     # STFT synthesis
     outfft = smsyn(essentia.array(m),
                       essentia.array(f),
-                      essentia.array(p)
+                      essentia.array([])
                       )
     # STFT synthesis
     out = overl(ifft(outfft))
