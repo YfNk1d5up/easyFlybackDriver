@@ -5,8 +5,8 @@ import tqdm
 
 
 # input and output files
-inputFilename = 'data/input/takeonme/vocals.wav'
-outputFilename = 'data/output/takeonme/vocalsv2.wav'
+inputFilename = 'data/input/test_polyphia_guitars_30s.wav'
+outputFilename = 'data/output/predominantPitchExtract/test_polyphia_guitars_30s/guitars.wav'
 # algorithm parameters
 params = {
     "frameSize": 2048,

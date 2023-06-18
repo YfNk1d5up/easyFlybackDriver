@@ -7,14 +7,9 @@ import tqdm
 import numpy as np
 from pathlib import Path
 
-# input and output files
-#tutorial_dir = Path(__file__).resolve().parent
-inputFilename = 'streaming/other.wav'
-outputFilename = 'harmonic_sub_synthesis.wav'
-
 params = {
     "frameSize": 2048,
-    "hopSize": 512,
+    "hopSize": 256,
     "startFromZero": False,
     "sampleRate": 44100.0,
     "maxnSines": 4,
@@ -22,14 +17,17 @@ params = {
     "minSineDur": 0.02,
     "freqDevOffset": 10,
     "freqDevSlope": 0.001,
-    "attenuation_dB":100,
-    "minFreq":300,
-    "maxFreq":1250,
-    "maskbinwidth":2
+    "attenuation_dB": 100,
+    "minFreq": 300,
+    "maxFreq": 1250,
+    "maskbinwidth": 2
 }
 
-
-
+# input and output files
+# tutorial_dir = Path(__file__).resolve().parent
+inputFilename = 'data/input/test_polyphia_guitars_30s.wav'
+outputFilename = f'data/output/harmonic_sub_synthesis/' \
+                 f'test_polyphia_guitars_30s/{params["frameSize"]}_{params["hopSize"]}.wav'
 
 # initialize some algorithms
 fcut = es.FrameCutter(
@@ -53,7 +51,7 @@ smsyn = es.SineModelSynth(
     hopSize=params["hopSize"],
 )
 filter = es.BandPass(
-    bandwidth=params["maxFreq"]-params["minFreq"],
+    bandwidth=params["maxFreq"] - params["minFreq"],
     cutoffFrequency=params["maxFreq"],
     sampleRate=params["sampleRate"]
 )
@@ -75,17 +73,15 @@ audio = es.MonoLoader(filename=str(inputFilename),
 print(f"Duration of the audio sample [sec]: {len(audio) / params['sampleRate']:.3f}")
 audio = filter(audio)
 
-
 # init output audio array
 audioout = np.array(0)
 
 # loop over all frames
 for idx, frame in tqdm.tqdm(enumerate(
-    es.FrameGenerator(audio, frameSize=params["frameSize"],
-                      hopSize=params["hopSize"]
-                      )
+        es.FrameGenerator(audio, frameSize=params["frameSize"],
+                          hopSize=params["hopSize"]
+                          )
 )):
-
     # STFT analysis
     fft0 = fft(w(frame))
     frequencies, magnitudes, phases = smanal(fft0)
@@ -100,7 +96,7 @@ for idx, frame in tqdm.tqdm(enumerate(
     m1 = magnitudes[0]
     f1 = frequencies[0]
     p1 = phases[0]
-    """
+
     fft2 = hmask(fft1, f1)
     frequencies, magnitudes, phases = smanal(fft2)
     # get pitch of current frame
@@ -113,15 +109,15 @@ for idx, frame in tqdm.tqdm(enumerate(
     m3 = magnitudes[0]
     f3 = frequencies[0]
     p3 = phases[0]
-    """
-    m = [1, 1]
-    f = [f0, f1]
-    p = [p0, p1]
+
+    m = [1, 1, 1, 1]
+    f = [f0, f1, f2, f3]
+    # p = [p0, p1]
     # STFT synthesis
     outfft = smsyn(essentia.array(m),
-                      essentia.array(f),
-                      essentia.array([])
-                      )
+                   essentia.array(f),
+                   essentia.array([])
+                   )
     # STFT synthesis
     out = overl(ifft(outfft))
     audioout = np.append(audioout, out)

@@ -8,3 +8,4 @@ wave
 argparse
 basic-pitch
 demucs
+essentia
